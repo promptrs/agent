@@ -1,0 +1,123 @@
+#[allow(warnings)]
+mod bindings;
+
+use bindings::exports::promptrs::agent::runner::Guest;
+use bindings::promptrs::client::completion::{Message, Params, Request, receive};
+use bindings::promptrs::parser::response::{Delims, Response, parse};
+use bindings::promptrs::tools::caller::{System, ToolDelims, call, init, status};
+use serde::Deserialize;
+use serde_json::json;
+
+struct Component;
+
+impl Guest for Component {
+	fn run(input: String, config: String) -> String {
+		let Ok(config) = serde_json::from_str::<Config>(&config) else {
+			return "Failed".into();
+		};
+
+		let delims = &Delims {
+			reasoning: config.delims.reasoning,
+			tool_call: config.delims.tool_call.clone(),
+		};
+		let System {
+			prompt,
+			status_call,
+		} = init(&ToolDelims {
+			available_tools: config.delims.available_tools,
+			tool_call: config.delims.tool_call,
+		});
+		let mut request = Request {
+			api_key: config.api_key,
+			base_url: config.base_url,
+			body: Params {
+				model: config.model,
+				temperature: config.temperature,
+				top_p: config.top_p,
+				messages: vec![Message::System(prompt), Message::User(input)],
+				stream: true,
+			},
+		};
+
+		loop {
+			let Ok(response) = receive(&request) else {
+				continue;
+			};
+
+			let Response { tool_calls, .. } = parse(&response, Some(&delims));
+			for tool_call in tool_calls {
+				let resp = call(&tool_call.name, &tool_call.arguments);
+				let tc = serde_json::to_string(&json!({
+					"name": tool_call.name,
+					"arguments": tool_call.arguments,
+				}))
+				.unwrap_or("".into());
+
+				let messages = &mut request.body.messages;
+				messages.push(Message::ToolCall((tc, resp.output)));
+				if resp.score < 1. {
+					messages.push(Message::Status((status_call.clone(), status().output)));
+				}
+			}
+			request.body.messages = prune(request.body.messages, 20000);
+		}
+	}
+}
+
+fn prune(messages: Vec<Message>, size: u64) -> Vec<Message> {
+	let mut pruned = messages.iter().skip(1).rev().scan(0, |acc, msg| {
+		if *acc > size as usize {
+			return None;
+		}
+		*acc += match msg {
+			Message::System(content) => *acc + content.len(),
+			Message::User(content) => *acc + content.len(),
+			Message::Assistant(content) => *acc + content.len(),
+			Message::ToolCall((req, res)) => *acc + req.len() + res.len(),
+			Message::Status((req, res)) => *acc + req.len() + res.len(),
+		};
+		Some(msg)
+	});
+
+	let mut messages = if let Some(pos) = pruned.position(is_status) {
+		pruned
+			.clone()
+			.take(pos + 1)
+			.chain(pruned.skip(pos + 1).filter(|msg| !is_status(msg)))
+			.chain(messages.iter().take(1))
+			.cloned()
+			.collect::<Vec<_>>()
+	} else {
+		pruned.chain(messages.iter().take(1)).cloned().collect()
+	};
+
+	messages.reverse();
+	messages
+}
+
+fn is_status(msg: &Message) -> bool {
+	if let Message::Status(_) = msg {
+		true
+	} else {
+		false
+	}
+}
+
+#[derive(Deserialize)]
+struct Config {
+	base_url: String,
+	api_key: Option<String>,
+	model: String,
+	temperature: Option<f64>,
+	top_p: Option<f64>,
+	delims: DelimConfig,
+}
+
+#[derive(Deserialize)]
+struct DelimConfig {
+	reasoning: Option<(String, String)>,
+	available_tools: (String, String),
+	tool_call: (String, String),
+}
+
+bindings::export!(Component with_types_in bindings);

@@ -1,0 +1,26 @@
+package promptrs:tools@0.1.0;
+
+interface caller {
+	record system {
+		prompt: string,
+		status-call: string,
+	}
+
+	record tool-delims {
+		available-tools: tuple<string, string>,
+		tool-call: tuple<string, string>,
+	}
+
+	record tool-response {
+		output: string,
+		score: f64,
+	}
+
+	init: func(tool-delims: tool-delims) -> system;
+	status: func() -> tool-response;
+	call: func(tool-name: string, args: list<tuple<string, string>>) -> tool-response;
+}
+
+world tools {
+	export caller;
+}
