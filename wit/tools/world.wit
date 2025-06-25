@@ -1,4 +1,4 @@
-package promptrs:tools@0.2.0;
+package promptrs:tools@0.3.0;
 
 interface caller {
 	record system {
@@ -13,12 +13,16 @@ interface caller {
 
 	record tool-response {
 		output: string,
-		score: f64,
+		status: option<string>,
 	}
 
-	init: func(delims: tool-delims) -> system;
-	status: func() -> tool-response;
-	call: func(name: string, arguments: string) -> tool-response;
+	resource tooling {
+		constructor(config: string);
+		init: func(delims: tool-delims) -> system;
+		prompt: func(content: string) -> result<string, string>;
+		status: func() -> string;
+		call: func(name: string, arguments: string) -> tool-response;
+	}
 }
 
 world tools {

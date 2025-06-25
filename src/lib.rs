@@ -6,13 +6,14 @@ use bindings::promptrs::client::completion::{
 	Message, Params, Request, Response as RawResponse, ToolCall, receive,
 };
 use bindings::promptrs::parser::response::{Delims, parse};
-use bindings::promptrs::tools::caller::{System, ToolDelims, call, init, status};
+use bindings::promptrs::tools::caller::{System, ToolDelims, Tooling};
 use serde::Deserialize;
 
 struct Component;
 
 impl Guest for Component {
 	fn run(input: String, config: String) -> String {
+		let tooling = Tooling::new(&config);
 		let Ok(config) = serde_json::from_str::<Config>(&config) else {
 			return "Failed".into();
 		};
@@ -24,10 +25,15 @@ impl Guest for Component {
 		let System {
 			prompt,
 			status_call,
-		} = init(&ToolDelims {
+		} = tooling.init(&ToolDelims {
 			available_tools: config.delims.available_tools,
 			tool_call: config.delims.tool_call,
 		});
+
+		let user = match tooling.prompt(&input) {
+			Ok(output) => return output,
+			Err(user) => user,
+		};
 		let mut request = Request {
 			api_key: config.api_key,
 			base_url: config.base_url,
@@ -35,7 +41,7 @@ impl Guest for Component {
 				model: config.model,
 				temperature: config.temperature,
 				top_p: config.top_p,
-				messages: vec![Message::System(prompt), Message::User(input)],
+				messages: vec![Message::System(prompt), Message::User(user)],
 				stream: true,
 			},
 		};
@@ -68,7 +74,7 @@ impl Guest for Component {
 			}
 
 			for tool_call in tool_calls {
-				let resp = call(&tool_call.name, &tool_call.arguments);
+				let resp = tooling.call(&tool_call.name, &tool_call.arguments);
 				let tc = format!(
 					r#"{{"name":"{}","arguments":{}}}"#,
 					tool_call.name, tool_call.arguments
@@ -76,10 +82,16 @@ impl Guest for Component {
 
 				let messages = &mut request.body.messages;
 				messages.push(Message::ToolCall((tc, resp.output)));
-				if resp.score < 1. {
-					messages.push(Message::Status((status_call.clone(), status().output)));
+				if let Some(status) = resp.status {
+					messages.push(Message::Status((status_call.clone(), status)));
 				}
 			}
+
+			match tooling.prompt(text) {
+				Ok(output) => return output,
+				Err(user) => request.body.messages.push(Message::User(user)),
+			};
+
 			request.body.messages = prune(request.body.messages, 20000);
 		}
 	}

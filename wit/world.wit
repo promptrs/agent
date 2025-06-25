@@ -1,4 +1,4 @@
-package promptrs:agent@0.2.0;
+package promptrs:agent@0.3.0;
 
 interface runner {
 	run: func(input: string, config: string) -> string;
@@ -7,6 +7,6 @@ interface runner {
 world agent {
 	import promptrs:client/completion@0.2.0;
 	import promptrs:parser/response@0.2.0;
-	import promptrs:tools/caller@0.2.0;
+	import promptrs:tools/caller@0.3.0;
 	export runner;
 }

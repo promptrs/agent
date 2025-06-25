@@ -768,7 +768,7 @@ pub mod promptrs {
             #[derive(Clone)]
             pub struct ToolResponse {
                 pub output: _rt::String,
-                pub score: f64,
+                pub status: Option<_rt::String>,
             }
             impl ::core::fmt::Debug for ToolResponse {
                 fn fmt(
@@ -777,207 +777,389 @@ pub mod promptrs {
                 ) -> ::core::fmt::Result {
                     f.debug_struct("ToolResponse")
                         .field("output", &self.output)
-                        .field("score", &self.score)
+                        .field("status", &self.status)
                         .finish()
                 }
             }
-            #[allow(unused_unsafe, clippy::all)]
-            pub fn init(delims: &ToolDelims) -> System {
-                unsafe {
-                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
-                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
-                    struct RetArea(
-                        [::core::mem::MaybeUninit<
-                            u8,
-                        >; 4 * ::core::mem::size_of::<*const u8>()],
-                    );
-                    let mut ret_area = RetArea(
-                        [::core::mem::MaybeUninit::uninit(); 4
-                            * ::core::mem::size_of::<*const u8>()],
-                    );
-                    let ToolDelims {
-                        available_tools: available_tools0,
-                        tool_call: tool_call0,
-                    } = delims;
-                    let (t1_0, t1_1) = available_tools0;
-                    let vec2 = t1_0;
-                    let ptr2 = vec2.as_ptr().cast::<u8>();
-                    let len2 = vec2.len();
-                    let vec3 = t1_1;
-                    let ptr3 = vec3.as_ptr().cast::<u8>();
-                    let len3 = vec3.len();
-                    let (t4_0, t4_1) = tool_call0;
-                    let vec5 = t4_0;
-                    let ptr5 = vec5.as_ptr().cast::<u8>();
-                    let len5 = vec5.len();
-                    let vec6 = t4_1;
-                    let ptr6 = vec6.as_ptr().cast::<u8>();
-                    let len6 = vec6.len();
-                    let ptr7 = ret_area.0.as_mut_ptr().cast::<u8>();
-                    #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "promptrs:tools/caller@0.2.0")]
-                    unsafe extern "C" {
-                        #[link_name = "init"]
-                        fn wit_import8(
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                        );
+            #[derive(Debug)]
+            #[repr(transparent)]
+            pub struct Tooling {
+                handle: _rt::Resource<Tooling>,
+            }
+            impl Tooling {
+                #[doc(hidden)]
+                pub unsafe fn from_handle(handle: u32) -> Self {
+                    Self {
+                        handle: unsafe { _rt::Resource::from_handle(handle) },
                     }
-                    #[cfg(not(target_arch = "wasm32"))]
-                    unsafe extern "C" fn wit_import8(
-                        _: *mut u8,
-                        _: usize,
-                        _: *mut u8,
-                        _: usize,
-                        _: *mut u8,
-                        _: usize,
-                        _: *mut u8,
-                        _: usize,
-                        _: *mut u8,
-                    ) {
-                        unreachable!()
-                    }
-                    unsafe {
-                        wit_import8(
-                            ptr2.cast_mut(),
-                            len2,
-                            ptr3.cast_mut(),
-                            len3,
-                            ptr5.cast_mut(),
-                            len5,
-                            ptr6.cast_mut(),
-                            len6,
-                            ptr7,
-                        )
-                    };
-                    let l9 = *ptr7.add(0).cast::<*mut u8>();
-                    let l10 = *ptr7
-                        .add(::core::mem::size_of::<*const u8>())
-                        .cast::<usize>();
-                    let len11 = l10;
-                    let bytes11 = _rt::Vec::from_raw_parts(l9.cast(), len11, len11);
-                    let l12 = *ptr7
-                        .add(2 * ::core::mem::size_of::<*const u8>())
-                        .cast::<*mut u8>();
-                    let l13 = *ptr7
-                        .add(3 * ::core::mem::size_of::<*const u8>())
-                        .cast::<usize>();
-                    let len14 = l13;
-                    let bytes14 = _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
-                    let result15 = System {
-                        prompt: _rt::string_lift(bytes11),
-                        status_call: _rt::string_lift(bytes14),
-                    };
-                    result15
+                }
+                #[doc(hidden)]
+                pub fn take_handle(&self) -> u32 {
+                    _rt::Resource::take_handle(&self.handle)
+                }
+                #[doc(hidden)]
+                pub fn handle(&self) -> u32 {
+                    _rt::Resource::handle(&self.handle)
                 }
             }
-            #[allow(unused_unsafe, clippy::all)]
-            pub fn status() -> ToolResponse {
-                unsafe {
-                    #[repr(align(8))]
-                    struct RetArea(
-                        [::core::mem::MaybeUninit<
-                            u8,
-                        >; 8 + 2 * ::core::mem::size_of::<*const u8>()],
-                    );
-                    let mut ret_area = RetArea(
-                        [::core::mem::MaybeUninit::uninit(); 8
-                            + 2 * ::core::mem::size_of::<*const u8>()],
-                    );
-                    let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
-                    #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "promptrs:tools/caller@0.2.0")]
-                    unsafe extern "C" {
-                        #[link_name = "status"]
-                        fn wit_import1(_: *mut u8);
-                    }
+            unsafe impl _rt::WasmResource for Tooling {
+                #[inline]
+                unsafe fn drop(_handle: u32) {
                     #[cfg(not(target_arch = "wasm32"))]
-                    unsafe extern "C" fn wit_import1(_: *mut u8) {
-                        unreachable!()
+                    unreachable!();
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        #[link(wasm_import_module = "promptrs:tools/caller@0.3.0")]
+                        unsafe extern "C" {
+                            #[link_name = "[resource-drop]tooling"]
+                            fn drop(_: u32);
+                        }
+                        unsafe { drop(_handle) };
                     }
-                    unsafe { wit_import1(ptr0) };
-                    let l2 = *ptr0.add(0).cast::<*mut u8>();
-                    let l3 = *ptr0
-                        .add(::core::mem::size_of::<*const u8>())
-                        .cast::<usize>();
-                    let len4 = l3;
-                    let bytes4 = _rt::Vec::from_raw_parts(l2.cast(), len4, len4);
-                    let l5 = *ptr0
-                        .add(2 * ::core::mem::size_of::<*const u8>())
-                        .cast::<f64>();
-                    let result6 = ToolResponse {
-                        output: _rt::string_lift(bytes4),
-                        score: l5,
-                    };
-                    result6
                 }
             }
-            #[allow(unused_unsafe, clippy::all)]
-            pub fn call(name: &str, arguments: &str) -> ToolResponse {
-                unsafe {
-                    #[repr(align(8))]
-                    struct RetArea(
-                        [::core::mem::MaybeUninit<
-                            u8,
-                        >; 8 + 2 * ::core::mem::size_of::<*const u8>()],
-                    );
-                    let mut ret_area = RetArea(
-                        [::core::mem::MaybeUninit::uninit(); 8
-                            + 2 * ::core::mem::size_of::<*const u8>()],
-                    );
-                    let vec0 = name;
-                    let ptr0 = vec0.as_ptr().cast::<u8>();
-                    let len0 = vec0.len();
-                    let vec1 = arguments;
-                    let ptr1 = vec1.as_ptr().cast::<u8>();
-                    let len1 = vec1.len();
-                    let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
-                    #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "promptrs:tools/caller@0.2.0")]
-                    unsafe extern "C" {
-                        #[link_name = "call"]
-                        fn wit_import3(
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                        );
-                    }
-                    #[cfg(not(target_arch = "wasm32"))]
-                    unsafe extern "C" fn wit_import3(
-                        _: *mut u8,
-                        _: usize,
-                        _: *mut u8,
-                        _: usize,
-                        _: *mut u8,
-                    ) {
-                        unreachable!()
-                    }
+            impl Tooling {
+                #[allow(unused_unsafe, clippy::all)]
+                pub fn new(config: &str) -> Self {
                     unsafe {
-                        wit_import3(ptr0.cast_mut(), len0, ptr1.cast_mut(), len1, ptr2)
-                    };
-                    let l4 = *ptr2.add(0).cast::<*mut u8>();
-                    let l5 = *ptr2
-                        .add(::core::mem::size_of::<*const u8>())
-                        .cast::<usize>();
-                    let len6 = l5;
-                    let bytes6 = _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
-                    let l7 = *ptr2
-                        .add(2 * ::core::mem::size_of::<*const u8>())
-                        .cast::<f64>();
-                    let result8 = ToolResponse {
-                        output: _rt::string_lift(bytes6),
-                        score: l7,
-                    };
-                    result8
+                        let vec0 = config;
+                        let ptr0 = vec0.as_ptr().cast::<u8>();
+                        let len0 = vec0.len();
+                        #[cfg(target_arch = "wasm32")]
+                        #[link(wasm_import_module = "promptrs:tools/caller@0.3.0")]
+                        unsafe extern "C" {
+                            #[link_name = "[constructor]tooling"]
+                            fn wit_import1(_: *mut u8, _: usize) -> i32;
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        unsafe extern "C" fn wit_import1(_: *mut u8, _: usize) -> i32 {
+                            unreachable!()
+                        }
+                        let ret = unsafe { wit_import1(ptr0.cast_mut(), len0) };
+                        unsafe { Tooling::from_handle(ret as u32) }
+                    }
+                }
+            }
+            impl Tooling {
+                #[allow(unused_unsafe, clippy::all)]
+                pub fn init(&self, delims: &ToolDelims) -> System {
+                    unsafe {
+                        #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                        #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                        struct RetArea(
+                            [::core::mem::MaybeUninit<
+                                u8,
+                            >; 4 * ::core::mem::size_of::<*const u8>()],
+                        );
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 4
+                                * ::core::mem::size_of::<*const u8>()],
+                        );
+                        let ToolDelims {
+                            available_tools: available_tools0,
+                            tool_call: tool_call0,
+                        } = delims;
+                        let (t1_0, t1_1) = available_tools0;
+                        let vec2 = t1_0;
+                        let ptr2 = vec2.as_ptr().cast::<u8>();
+                        let len2 = vec2.len();
+                        let vec3 = t1_1;
+                        let ptr3 = vec3.as_ptr().cast::<u8>();
+                        let len3 = vec3.len();
+                        let (t4_0, t4_1) = tool_call0;
+                        let vec5 = t4_0;
+                        let ptr5 = vec5.as_ptr().cast::<u8>();
+                        let len5 = vec5.len();
+                        let vec6 = t4_1;
+                        let ptr6 = vec6.as_ptr().cast::<u8>();
+                        let len6 = vec6.len();
+                        let ptr7 = ret_area.0.as_mut_ptr().cast::<u8>();
+                        #[cfg(target_arch = "wasm32")]
+                        #[link(wasm_import_module = "promptrs:tools/caller@0.3.0")]
+                        unsafe extern "C" {
+                            #[link_name = "[method]tooling.init"]
+                            fn wit_import8(
+                                _: i32,
+                                _: *mut u8,
+                                _: usize,
+                                _: *mut u8,
+                                _: usize,
+                                _: *mut u8,
+                                _: usize,
+                                _: *mut u8,
+                                _: usize,
+                                _: *mut u8,
+                            );
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        unsafe extern "C" fn wit_import8(
+                            _: i32,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                        ) {
+                            unreachable!()
+                        }
+                        unsafe {
+                            wit_import8(
+                                (self).handle() as i32,
+                                ptr2.cast_mut(),
+                                len2,
+                                ptr3.cast_mut(),
+                                len3,
+                                ptr5.cast_mut(),
+                                len5,
+                                ptr6.cast_mut(),
+                                len6,
+                                ptr7,
+                            )
+                        };
+                        let l9 = *ptr7.add(0).cast::<*mut u8>();
+                        let l10 = *ptr7
+                            .add(::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
+                        let len11 = l10;
+                        let bytes11 = _rt::Vec::from_raw_parts(l9.cast(), len11, len11);
+                        let l12 = *ptr7
+                            .add(2 * ::core::mem::size_of::<*const u8>())
+                            .cast::<*mut u8>();
+                        let l13 = *ptr7
+                            .add(3 * ::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
+                        let len14 = l13;
+                        let bytes14 = _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
+                        let result15 = System {
+                            prompt: _rt::string_lift(bytes11),
+                            status_call: _rt::string_lift(bytes14),
+                        };
+                        result15
+                    }
+                }
+            }
+            impl Tooling {
+                #[allow(unused_unsafe, clippy::all)]
+                pub fn prompt(&self, content: &str) -> Result<_rt::String, _rt::String> {
+                    unsafe {
+                        #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                        #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                        struct RetArea(
+                            [::core::mem::MaybeUninit<
+                                u8,
+                            >; 3 * ::core::mem::size_of::<*const u8>()],
+                        );
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 3
+                                * ::core::mem::size_of::<*const u8>()],
+                        );
+                        let vec0 = content;
+                        let ptr0 = vec0.as_ptr().cast::<u8>();
+                        let len0 = vec0.len();
+                        let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                        #[cfg(target_arch = "wasm32")]
+                        #[link(wasm_import_module = "promptrs:tools/caller@0.3.0")]
+                        unsafe extern "C" {
+                            #[link_name = "[method]tooling.prompt"]
+                            fn wit_import2(_: i32, _: *mut u8, _: usize, _: *mut u8);
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        unsafe extern "C" fn wit_import2(
+                            _: i32,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                        ) {
+                            unreachable!()
+                        }
+                        unsafe {
+                            wit_import2(
+                                (self).handle() as i32,
+                                ptr0.cast_mut(),
+                                len0,
+                                ptr1,
+                            )
+                        };
+                        let l3 = i32::from(*ptr1.add(0).cast::<u8>());
+                        let result10 = match l3 {
+                            0 => {
+                                let e = {
+                                    let l4 = *ptr1
+                                        .add(::core::mem::size_of::<*const u8>())
+                                        .cast::<*mut u8>();
+                                    let l5 = *ptr1
+                                        .add(2 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<usize>();
+                                    let len6 = l5;
+                                    let bytes6 = _rt::Vec::from_raw_parts(
+                                        l4.cast(),
+                                        len6,
+                                        len6,
+                                    );
+                                    _rt::string_lift(bytes6)
+                                };
+                                Ok(e)
+                            }
+                            1 => {
+                                let e = {
+                                    let l7 = *ptr1
+                                        .add(::core::mem::size_of::<*const u8>())
+                                        .cast::<*mut u8>();
+                                    let l8 = *ptr1
+                                        .add(2 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<usize>();
+                                    let len9 = l8;
+                                    let bytes9 = _rt::Vec::from_raw_parts(
+                                        l7.cast(),
+                                        len9,
+                                        len9,
+                                    );
+                                    _rt::string_lift(bytes9)
+                                };
+                                Err(e)
+                            }
+                            _ => _rt::invalid_enum_discriminant(),
+                        };
+                        result10
+                    }
+                }
+            }
+            impl Tooling {
+                #[allow(unused_unsafe, clippy::all)]
+                pub fn status(&self) -> _rt::String {
+                    unsafe {
+                        #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                        #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                        struct RetArea(
+                            [::core::mem::MaybeUninit<
+                                u8,
+                            >; 2 * ::core::mem::size_of::<*const u8>()],
+                        );
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 2
+                                * ::core::mem::size_of::<*const u8>()],
+                        );
+                        let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
+                        #[cfg(target_arch = "wasm32")]
+                        #[link(wasm_import_module = "promptrs:tools/caller@0.3.0")]
+                        unsafe extern "C" {
+                            #[link_name = "[method]tooling.status"]
+                            fn wit_import1(_: i32, _: *mut u8);
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        unsafe extern "C" fn wit_import1(_: i32, _: *mut u8) {
+                            unreachable!()
+                        }
+                        unsafe { wit_import1((self).handle() as i32, ptr0) };
+                        let l2 = *ptr0.add(0).cast::<*mut u8>();
+                        let l3 = *ptr0
+                            .add(::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
+                        let len4 = l3;
+                        let bytes4 = _rt::Vec::from_raw_parts(l2.cast(), len4, len4);
+                        let result5 = _rt::string_lift(bytes4);
+                        result5
+                    }
+                }
+            }
+            impl Tooling {
+                #[allow(unused_unsafe, clippy::all)]
+                pub fn call(&self, name: &str, arguments: &str) -> ToolResponse {
+                    unsafe {
+                        #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                        #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                        struct RetArea(
+                            [::core::mem::MaybeUninit<
+                                u8,
+                            >; 5 * ::core::mem::size_of::<*const u8>()],
+                        );
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 5
+                                * ::core::mem::size_of::<*const u8>()],
+                        );
+                        let vec0 = name;
+                        let ptr0 = vec0.as_ptr().cast::<u8>();
+                        let len0 = vec0.len();
+                        let vec1 = arguments;
+                        let ptr1 = vec1.as_ptr().cast::<u8>();
+                        let len1 = vec1.len();
+                        let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
+                        #[cfg(target_arch = "wasm32")]
+                        #[link(wasm_import_module = "promptrs:tools/caller@0.3.0")]
+                        unsafe extern "C" {
+                            #[link_name = "[method]tooling.call"]
+                            fn wit_import3(
+                                _: i32,
+                                _: *mut u8,
+                                _: usize,
+                                _: *mut u8,
+                                _: usize,
+                                _: *mut u8,
+                            );
+                        }
+                        #[cfg(not(target_arch = "wasm32"))]
+                        unsafe extern "C" fn wit_import3(
+                            _: i32,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                        ) {
+                            unreachable!()
+                        }
+                        unsafe {
+                            wit_import3(
+                                (self).handle() as i32,
+                                ptr0.cast_mut(),
+                                len0,
+                                ptr1.cast_mut(),
+                                len1,
+                                ptr2,
+                            )
+                        };
+                        let l4 = *ptr2.add(0).cast::<*mut u8>();
+                        let l5 = *ptr2
+                            .add(::core::mem::size_of::<*const u8>())
+                            .cast::<usize>();
+                        let len6 = l5;
+                        let bytes6 = _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
+                        let l7 = i32::from(
+                            *ptr2
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<u8>(),
+                        );
+                        let result11 = ToolResponse {
+                            output: _rt::string_lift(bytes6),
+                            status: match l7 {
+                                0 => None,
+                                1 => {
+                                    let e = {
+                                        let l8 = *ptr2
+                                            .add(3 * ::core::mem::size_of::<*const u8>())
+                                            .cast::<*mut u8>();
+                                        let l9 = *ptr2
+                                            .add(4 * ::core::mem::size_of::<*const u8>())
+                                            .cast::<usize>();
+                                        let len10 = l9;
+                                        let bytes10 = _rt::Vec::from_raw_parts(
+                                            l8.cast(),
+                                            len10,
+                                            len10,
+                                        );
+                                        _rt::string_lift(bytes10)
+                                    };
+                                    Some(e)
+                                }
+                                _ => _rt::invalid_enum_discriminant(),
+                            },
+                        };
+                        result11
+                    }
                 }
             }
         }
@@ -1033,20 +1215,20 @@ pub mod exports {
                     fn run(input: _rt::String, config: _rt::String) -> _rt::String;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_promptrs_agent_runner_0_2_0_cabi {
+                macro_rules! __export_promptrs_agent_runner_0_3_0_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "promptrs:agent/runner@0.2.0#run")] unsafe extern "C" fn
+                        "promptrs:agent/runner@0.3.0#run")] unsafe extern "C" fn
                         export_run(arg0 : * mut u8, arg1 : usize, arg2 : * mut u8, arg3 :
                         usize,) -> * mut u8 { unsafe { $($path_to_types)*::
                         _export_run_cabi::<$ty > (arg0, arg1, arg2, arg3) } } #[unsafe
-                        (export_name = "cabi_post_promptrs:agent/runner@0.2.0#run")]
+                        (export_name = "cabi_post_promptrs:agent/runner@0.3.0#run")]
                         unsafe extern "C" fn _post_return_run(arg0 : * mut u8,) { unsafe
                         { $($path_to_types)*:: __post_return_run::<$ty > (arg0) } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_promptrs_agent_runner_0_2_0_cabi;
+                pub(crate) use __export_promptrs_agent_runner_0_3_0_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -1106,6 +1288,80 @@ mod _rt {
             unsafe { core::hint::unreachable_unchecked() }
         }
     }
+    use core::fmt;
+    use core::marker;
+    use core::sync::atomic::{AtomicU32, Ordering::Relaxed};
+    /// A type which represents a component model resource, either imported or
+    /// exported into this component.
+    ///
+    /// This is a low-level wrapper which handles the lifetime of the resource
+    /// (namely this has a destructor). The `T` provided defines the component model
+    /// intrinsics that this wrapper uses.
+    ///
+    /// One of the chief purposes of this type is to provide `Deref` implementations
+    /// to access the underlying data when it is owned.
+    ///
+    /// This type is primarily used in generated code for exported and imported
+    /// resources.
+    #[repr(transparent)]
+    pub struct Resource<T: WasmResource> {
+        handle: AtomicU32,
+        _marker: marker::PhantomData<T>,
+    }
+    /// A trait which all wasm resources implement, namely providing the ability to
+    /// drop a resource.
+    ///
+    /// This generally is implemented by generated code, not user-facing code.
+    #[allow(clippy::missing_safety_doc)]
+    pub unsafe trait WasmResource {
+        /// Invokes the `[resource-drop]...` intrinsic.
+        unsafe fn drop(handle: u32);
+    }
+    impl<T: WasmResource> Resource<T> {
+        #[doc(hidden)]
+        pub unsafe fn from_handle(handle: u32) -> Self {
+            debug_assert!(handle != u32::MAX);
+            Self {
+                handle: AtomicU32::new(handle),
+                _marker: marker::PhantomData,
+            }
+        }
+        /// Takes ownership of the handle owned by `resource`.
+        ///
+        /// Note that this ideally would be `into_handle` taking `Resource<T>` by
+        /// ownership. The code generator does not enable that in all situations,
+        /// unfortunately, so this is provided instead.
+        ///
+        /// Also note that `take_handle` is in theory only ever called on values
+        /// owned by a generated function. For example a generated function might
+        /// take `Resource<T>` as an argument but then call `take_handle` on a
+        /// reference to that argument. In that sense the dynamic nature of
+        /// `take_handle` should only be exposed internally to generated code, not
+        /// to user code.
+        #[doc(hidden)]
+        pub fn take_handle(resource: &Resource<T>) -> u32 {
+            resource.handle.swap(u32::MAX, Relaxed)
+        }
+        #[doc(hidden)]
+        pub fn handle(resource: &Resource<T>) -> u32 {
+            resource.handle.load(Relaxed)
+        }
+    }
+    impl<T: WasmResource> fmt::Debug for Resource<T> {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.debug_struct("Resource").field("handle", &self.handle).finish()
+        }
+    }
+    impl<T: WasmResource> Drop for Resource<T> {
+        fn drop(&mut self) {
+            unsafe {
+                match self.handle.load(Relaxed) {
+                    u32::MAX => {}
+                    other => T::drop(other),
+                }
+            }
+        }
+    }
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
@@ -1136,7 +1392,7 @@ macro_rules! __export_agent_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::promptrs::agent::runner::__export_promptrs_agent_runner_0_2_0_cabi!($ty
+        exports::promptrs::agent::runner::__export_promptrs_agent_runner_0_3_0_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::promptrs::agent::runner);
     };
 }
@@ -1144,12 +1400,12 @@ macro_rules! __export_agent_impl {
 pub(crate) use __export_agent_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:promptrs:agent@0.2.0:agent:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:promptrs:agent@0.3.0:agent:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 993] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xe5\x06\x01A\x02\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 1172] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x98\x08\x01A\x02\x01\
 A\x08\x01B\x12\x01o\x02ss\x01q\x05\x06system\x01s\0\x04user\x01s\0\x09assistant\x01\
 s\0\x09tool-call\x01\0\0\x06status\x01\0\0\x04\0\x07message\x03\0\x01\x01ku\x01p\
 \x02\x01r\x05\x05models\x0btemperature\x03\x05top-p\x03\x08messages\x04\x06strea\
@@ -1162,15 +1418,19 @@ call\x03\0\x0a\x01p\x0b\x01r\x02\x04texts\x0atool-calls\x0c\x04\0\x08response\x0
 argumentss\x04\0\x09tool-call\x03\0\x04\x01ks\x01p\x05\x01r\x03\x09reasoning\x06\
 \x07contents\x0atool-calls\x07\x04\0\x08response\x03\0\x08\x01k\x03\x01@\x02\x08\
 responses\x06delims\x0a\0\x09\x04\0\x05parse\x01\x0b\x03\0\x1epromptrs:parser/re\
-sponse@0.2.0\x05\x01\x01B\x0d\x01r\x02\x06prompts\x0bstatus-calls\x04\0\x06syste\
+sponse@0.2.0\x05\x01\x01B\x16\x01r\x02\x06prompts\x0bstatus-calls\x04\0\x06syste\
 m\x03\0\0\x01o\x02ss\x01r\x02\x0favailable-tools\x02\x09tool-call\x02\x04\0\x0bt\
-ool-delims\x03\0\x03\x01r\x02\x06outputs\x05scoreu\x04\0\x0dtool-response\x03\0\x05\
-\x01@\x01\x06delims\x04\0\x01\x04\0\x04init\x01\x07\x01@\0\0\x06\x04\0\x06status\
-\x01\x08\x01@\x02\x04names\x09argumentss\0\x06\x04\0\x04call\x01\x09\x03\0\x1bpr\
-omptrs:tools/caller@0.2.0\x05\x02\x01B\x02\x01@\x02\x05inputs\x06configs\0s\x04\0\
-\x03run\x01\0\x04\0\x1bpromptrs:agent/runner@0.2.0\x05\x03\x04\0\x1apromptrs:age\
-nt/agent@0.2.0\x04\0\x0b\x0b\x01\0\x05agent\x03\0\0\0G\x09producers\x01\x0cproce\
-ssed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
+ool-delims\x03\0\x03\x01ks\x01r\x02\x06outputs\x06status\x05\x04\0\x0dtool-respo\
+nse\x03\0\x06\x04\0\x07tooling\x03\x01\x01i\x08\x01@\x01\x06configs\0\x09\x04\0\x14\
+[constructor]tooling\x01\x0a\x01h\x08\x01@\x02\x04self\x0b\x06delims\x04\0\x01\x04\
+\0\x14[method]tooling.init\x01\x0c\x01j\x01s\x01s\x01@\x02\x04self\x0b\x07conten\
+ts\0\x0d\x04\0\x16[method]tooling.prompt\x01\x0e\x01@\x01\x04self\x0b\0s\x04\0\x16\
+[method]tooling.status\x01\x0f\x01@\x03\x04self\x0b\x04names\x09argumentss\0\x07\
+\x04\0\x14[method]tooling.call\x01\x10\x03\0\x1bpromptrs:tools/caller@0.3.0\x05\x02\
+\x01B\x02\x01@\x02\x05inputs\x06configs\0s\x04\0\x03run\x01\0\x04\0\x1bpromptrs:\
+agent/runner@0.3.0\x05\x03\x04\0\x1apromptrs:agent/agent@0.3.0\x04\0\x0b\x0b\x01\
+\0\x05agent\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x07\
+0.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
