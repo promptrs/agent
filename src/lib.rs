@@ -2,11 +2,12 @@
 mod bindings;
 
 use bindings::exports::promptrs::agent::runner::Guest;
-use bindings::promptrs::client::completion::{Message, Params, Request, receive};
-use bindings::promptrs::parser::response::{Delims, Response, parse};
+use bindings::promptrs::client::completion::{
+	Message, Params, Request, Response as RawResponse, ToolCall, receive,
+};
+use bindings::promptrs::parser::response::{Delims, parse};
 use bindings::promptrs::tools::caller::{System, ToolDelims, call, init, status};
 use serde::Deserialize;
-use serde_json::json;
 
 struct Component;
 
@@ -40,18 +41,30 @@ impl Guest for Component {
 		};
 
 		loop {
-			let Ok(response) = receive(&request) else {
+			let Ok(RawResponse {
+				text,
+				mut tool_calls,
+			}) = receive(&request)
+			else {
 				continue;
 			};
 
-			let Response { tool_calls, .. } = parse(&response, Some(&delims));
+			if tool_calls.is_empty() {
+				tool_calls = parse(&text, Some(&delims))
+					.tool_calls
+					.into_iter()
+					.map(|tc| ToolCall {
+						name: tc.name,
+						arguments: tc.arguments,
+					})
+					.collect();
+			}
 			for tool_call in tool_calls {
 				let resp = call(&tool_call.name, &tool_call.arguments);
-				let tc = serde_json::to_string(&json!({
-					"name": tool_call.name,
-					"arguments": tool_call.arguments,
-				}))
-				.unwrap_or("".into());
+				let tc = format!(
+					r#"{{"name":"{}","arguments":{}}}"#,
+					tool_call.name, tool_call.arguments
+				);
 
 				let messages = &mut request.body.messages;
 				messages.push(Message::ToolCall((tc, resp.output)));

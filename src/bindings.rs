@@ -83,18 +83,50 @@ pub mod promptrs {
                         .finish()
                 }
             }
+            #[derive(Clone)]
+            pub struct ToolCall {
+                pub name: _rt::String,
+                pub arguments: _rt::String,
+            }
+            impl ::core::fmt::Debug for ToolCall {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.debug_struct("ToolCall")
+                        .field("name", &self.name)
+                        .field("arguments", &self.arguments)
+                        .finish()
+                }
+            }
+            #[derive(Clone)]
+            pub struct Response {
+                pub text: _rt::String,
+                pub tool_calls: _rt::Vec<ToolCall>,
+            }
+            impl ::core::fmt::Debug for Response {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.debug_struct("Response")
+                        .field("text", &self.text)
+                        .field("tool-calls", &self.tool_calls)
+                        .finish()
+                }
+            }
             #[allow(unused_unsafe, clippy::all)]
-            pub fn receive(payload: &Request) -> Result<_rt::String, _rt::String> {
+            pub fn receive(payload: &Request) -> Result<Response, _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                     #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                     struct RetArea(
                         [::core::mem::MaybeUninit<
                             u8,
-                        >; 3 * ::core::mem::size_of::<*const u8>()],
+                        >; 5 * ::core::mem::size_of::<*const u8>()],
                     );
                     let mut ret_area = RetArea(
-                        [::core::mem::MaybeUninit::uninit(); 3
+                        [::core::mem::MaybeUninit::uninit(); 5
                             * ::core::mem::size_of::<*const u8>()],
                     );
                     let Request {
@@ -237,7 +269,7 @@ pub mod promptrs {
                     }
                     let ptr18 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "promptrs:client/completion@0.1.0")]
+                    #[link(wasm_import_module = "promptrs:client/completion@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "receive"]
                         fn wit_import19(
@@ -301,7 +333,7 @@ pub mod promptrs {
                         )
                     };
                     let l20 = i32::from(*ptr18.add(0).cast::<u8>());
-                    let result27 = match l20 {
+                    let result36 = match l20 {
                         0 => {
                             let e = {
                                 let l21 = *ptr18
@@ -316,25 +348,75 @@ pub mod promptrs {
                                     len23,
                                     len23,
                                 );
-                                _rt::string_lift(bytes23)
+                                let l24 = *ptr18
+                                    .add(3 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l25 = *ptr18
+                                    .add(4 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let base32 = l24;
+                                let len32 = l25;
+                                let mut result32 = _rt::Vec::with_capacity(len32);
+                                for i in 0..len32 {
+                                    let base = base32
+                                        .add(i * (4 * ::core::mem::size_of::<*const u8>()));
+                                    let e32 = {
+                                        let l26 = *base.add(0).cast::<*mut u8>();
+                                        let l27 = *base
+                                            .add(::core::mem::size_of::<*const u8>())
+                                            .cast::<usize>();
+                                        let len28 = l27;
+                                        let bytes28 = _rt::Vec::from_raw_parts(
+                                            l26.cast(),
+                                            len28,
+                                            len28,
+                                        );
+                                        let l29 = *base
+                                            .add(2 * ::core::mem::size_of::<*const u8>())
+                                            .cast::<*mut u8>();
+                                        let l30 = *base
+                                            .add(3 * ::core::mem::size_of::<*const u8>())
+                                            .cast::<usize>();
+                                        let len31 = l30;
+                                        let bytes31 = _rt::Vec::from_raw_parts(
+                                            l29.cast(),
+                                            len31,
+                                            len31,
+                                        );
+                                        ToolCall {
+                                            name: _rt::string_lift(bytes28),
+                                            arguments: _rt::string_lift(bytes31),
+                                        }
+                                    };
+                                    result32.push(e32);
+                                }
+                                _rt::cabi_dealloc(
+                                    base32,
+                                    len32 * (4 * ::core::mem::size_of::<*const u8>()),
+                                    ::core::mem::size_of::<*const u8>(),
+                                );
+                                Response {
+                                    text: _rt::string_lift(bytes23),
+                                    tool_calls: result32,
+                                }
                             };
                             Ok(e)
                         }
                         1 => {
                             let e = {
-                                let l24 = *ptr18
+                                let l33 = *ptr18
                                     .add(::core::mem::size_of::<*const u8>())
                                     .cast::<*mut u8>();
-                                let l25 = *ptr18
+                                let l34 = *ptr18
                                     .add(2 * ::core::mem::size_of::<*const u8>())
                                     .cast::<usize>();
-                                let len26 = l25;
-                                let bytes26 = _rt::Vec::from_raw_parts(
-                                    l24.cast(),
-                                    len26,
-                                    len26,
+                                let len35 = l34;
+                                let bytes35 = _rt::Vec::from_raw_parts(
+                                    l33.cast(),
+                                    len35,
+                                    len35,
                                 );
-                                _rt::string_lift(bytes26)
+                                _rt::string_lift(bytes35)
                             };
                             Err(e)
                         }
@@ -343,7 +425,7 @@ pub mod promptrs {
                     if layout17.size() != 0 {
                         _rt::alloc::dealloc(result17.cast(), layout17);
                     }
-                    result27
+                    result36
                 }
             }
         }
@@ -374,7 +456,7 @@ pub mod promptrs {
             #[derive(Clone)]
             pub struct ToolCall {
                 pub name: _rt::String,
-                pub arguments: _rt::Vec<(_rt::String, _rt::String)>,
+                pub arguments: _rt::String,
             }
             impl ::core::fmt::Debug for ToolCall {
                 fn fmt(
@@ -503,7 +585,7 @@ pub mod promptrs {
                     };
                     let ptr10 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "promptrs:parser/response@0.1.0")]
+                    #[link(wasm_import_module = "promptrs:parser/response@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "parse"]
                         fn wit_import11(
@@ -572,13 +654,13 @@ pub mod promptrs {
                     let l20 = *ptr10
                         .add(6 * ::core::mem::size_of::<*const u8>())
                         .cast::<usize>();
-                    let base33 = l19;
-                    let len33 = l20;
-                    let mut result33 = _rt::Vec::with_capacity(len33);
-                    for i in 0..len33 {
-                        let base = base33
+                    let base27 = l19;
+                    let len27 = l20;
+                    let mut result27 = _rt::Vec::with_capacity(len27);
+                    for i in 0..len27 {
+                        let base = base27
                             .add(i * (4 * ::core::mem::size_of::<*const u8>()));
-                        let e33 = {
+                        let e27 = {
                             let l21 = *base.add(0).cast::<*mut u8>();
                             let l22 = *base
                                 .add(::core::mem::size_of::<*const u8>())
@@ -595,57 +677,25 @@ pub mod promptrs {
                             let l25 = *base
                                 .add(3 * ::core::mem::size_of::<*const u8>())
                                 .cast::<usize>();
-                            let base32 = l24;
-                            let len32 = l25;
-                            let mut result32 = _rt::Vec::with_capacity(len32);
-                            for i in 0..len32 {
-                                let base = base32
-                                    .add(i * (4 * ::core::mem::size_of::<*const u8>()));
-                                let e32 = {
-                                    let l26 = *base.add(0).cast::<*mut u8>();
-                                    let l27 = *base
-                                        .add(::core::mem::size_of::<*const u8>())
-                                        .cast::<usize>();
-                                    let len28 = l27;
-                                    let bytes28 = _rt::Vec::from_raw_parts(
-                                        l26.cast(),
-                                        len28,
-                                        len28,
-                                    );
-                                    let l29 = *base
-                                        .add(2 * ::core::mem::size_of::<*const u8>())
-                                        .cast::<*mut u8>();
-                                    let l30 = *base
-                                        .add(3 * ::core::mem::size_of::<*const u8>())
-                                        .cast::<usize>();
-                                    let len31 = l30;
-                                    let bytes31 = _rt::Vec::from_raw_parts(
-                                        l29.cast(),
-                                        len31,
-                                        len31,
-                                    );
-                                    (_rt::string_lift(bytes28), _rt::string_lift(bytes31))
-                                };
-                                result32.push(e32);
-                            }
-                            _rt::cabi_dealloc(
-                                base32,
-                                len32 * (4 * ::core::mem::size_of::<*const u8>()),
-                                ::core::mem::size_of::<*const u8>(),
+                            let len26 = l25;
+                            let bytes26 = _rt::Vec::from_raw_parts(
+                                l24.cast(),
+                                len26,
+                                len26,
                             );
                             ToolCall {
                                 name: _rt::string_lift(bytes23),
-                                arguments: result32,
+                                arguments: _rt::string_lift(bytes26),
                             }
                         };
-                        result33.push(e33);
+                        result27.push(e27);
                     }
                     _rt::cabi_dealloc(
-                        base33,
-                        len33 * (4 * ::core::mem::size_of::<*const u8>()),
+                        base27,
+                        len27 * (4 * ::core::mem::size_of::<*const u8>()),
                         ::core::mem::size_of::<*const u8>(),
                     );
-                    let result34 = Response {
+                    let result28 = Response {
                         reasoning: match l12 {
                             0 => None,
                             1 => {
@@ -669,9 +719,9 @@ pub mod promptrs {
                             _ => _rt::invalid_enum_discriminant(),
                         },
                         content: _rt::string_lift(bytes18),
-                        tool_calls: result33,
+                        tool_calls: result27,
                     };
-                    result34
+                    result28
                 }
             }
         }
@@ -732,7 +782,7 @@ pub mod promptrs {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
-            pub fn init(tool_delims: &ToolDelims) -> System {
+            pub fn init(delims: &ToolDelims) -> System {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                     #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
@@ -748,7 +798,7 @@ pub mod promptrs {
                     let ToolDelims {
                         available_tools: available_tools0,
                         tool_call: tool_call0,
-                    } = tool_delims;
+                    } = delims;
                     let (t1_0, t1_1) = available_tools0;
                     let vec2 = t1_0;
                     let ptr2 = vec2.as_ptr().cast::<u8>();
@@ -765,7 +815,7 @@ pub mod promptrs {
                     let len6 = vec6.len();
                     let ptr7 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "promptrs:tools/caller@0.1.0")]
+                    #[link(wasm_import_module = "promptrs:tools/caller@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "init"]
                         fn wit_import8(
@@ -843,7 +893,7 @@ pub mod promptrs {
                     );
                     let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "promptrs:tools/caller@0.1.0")]
+                    #[link(wasm_import_module = "promptrs:tools/caller@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "status"]
                         fn wit_import1(_: *mut u8);
@@ -870,10 +920,7 @@ pub mod promptrs {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
-            pub fn call(
-                tool_name: &str,
-                args: &[(_rt::String, _rt::String)],
-            ) -> ToolResponse {
+            pub fn call(name: &str, arguments: &str) -> ToolResponse {
                 unsafe {
                     #[repr(align(8))]
                     struct RetArea(
@@ -885,53 +932,18 @@ pub mod promptrs {
                         [::core::mem::MaybeUninit::uninit(); 8
                             + 2 * ::core::mem::size_of::<*const u8>()],
                     );
-                    let vec0 = tool_name;
+                    let vec0 = name;
                     let ptr0 = vec0.as_ptr().cast::<u8>();
                     let len0 = vec0.len();
-                    let vec4 = args;
-                    let len4 = vec4.len();
-                    let layout4 = _rt::alloc::Layout::from_size_align_unchecked(
-                        vec4.len() * (4 * ::core::mem::size_of::<*const u8>()),
-                        ::core::mem::size_of::<*const u8>(),
-                    );
-                    let result4 = if layout4.size() != 0 {
-                        let ptr = _rt::alloc::alloc(layout4).cast::<u8>();
-                        if ptr.is_null() {
-                            _rt::alloc::handle_alloc_error(layout4);
-                        }
-                        ptr
-                    } else {
-                        ::core::ptr::null_mut()
-                    };
-                    for (i, e) in vec4.into_iter().enumerate() {
-                        let base = result4
-                            .add(i * (4 * ::core::mem::size_of::<*const u8>()));
-                        {
-                            let (t1_0, t1_1) = e;
-                            let vec2 = t1_0;
-                            let ptr2 = vec2.as_ptr().cast::<u8>();
-                            let len2 = vec2.len();
-                            *base
-                                .add(::core::mem::size_of::<*const u8>())
-                                .cast::<usize>() = len2;
-                            *base.add(0).cast::<*mut u8>() = ptr2.cast_mut();
-                            let vec3 = t1_1;
-                            let ptr3 = vec3.as_ptr().cast::<u8>();
-                            let len3 = vec3.len();
-                            *base
-                                .add(3 * ::core::mem::size_of::<*const u8>())
-                                .cast::<usize>() = len3;
-                            *base
-                                .add(2 * ::core::mem::size_of::<*const u8>())
-                                .cast::<*mut u8>() = ptr3.cast_mut();
-                        }
-                    }
-                    let ptr5 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    let vec1 = arguments;
+                    let ptr1 = vec1.as_ptr().cast::<u8>();
+                    let len1 = vec1.len();
+                    let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "promptrs:tools/caller@0.1.0")]
+                    #[link(wasm_import_module = "promptrs:tools/caller@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "call"]
-                        fn wit_import6(
+                        fn wit_import3(
                             _: *mut u8,
                             _: usize,
                             _: *mut u8,
@@ -940,7 +952,7 @@ pub mod promptrs {
                         );
                     }
                     #[cfg(not(target_arch = "wasm32"))]
-                    unsafe extern "C" fn wit_import6(
+                    unsafe extern "C" fn wit_import3(
                         _: *mut u8,
                         _: usize,
                         _: *mut u8,
@@ -949,24 +961,23 @@ pub mod promptrs {
                     ) {
                         unreachable!()
                     }
-                    unsafe { wit_import6(ptr0.cast_mut(), len0, result4, len4, ptr5) };
-                    let l7 = *ptr5.add(0).cast::<*mut u8>();
-                    let l8 = *ptr5
+                    unsafe {
+                        wit_import3(ptr0.cast_mut(), len0, ptr1.cast_mut(), len1, ptr2)
+                    };
+                    let l4 = *ptr2.add(0).cast::<*mut u8>();
+                    let l5 = *ptr2
                         .add(::core::mem::size_of::<*const u8>())
                         .cast::<usize>();
-                    let len9 = l8;
-                    let bytes9 = _rt::Vec::from_raw_parts(l7.cast(), len9, len9);
-                    let l10 = *ptr5
+                    let len6 = l5;
+                    let bytes6 = _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
+                    let l7 = *ptr2
                         .add(2 * ::core::mem::size_of::<*const u8>())
                         .cast::<f64>();
-                    let result11 = ToolResponse {
-                        output: _rt::string_lift(bytes9),
-                        score: l10,
+                    let result8 = ToolResponse {
+                        output: _rt::string_lift(bytes6),
+                        score: l7,
                     };
-                    if layout4.size() != 0 {
-                        _rt::alloc::dealloc(result4.cast(), layout4);
-                    }
-                    result11
+                    result8
                 }
             }
         }
@@ -1022,20 +1033,20 @@ pub mod exports {
                     fn run(input: _rt::String, config: _rt::String) -> _rt::String;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_promptrs_agent_runner_0_1_0_cabi {
+                macro_rules! __export_promptrs_agent_runner_0_2_0_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "promptrs:agent/runner@0.1.0#run")] unsafe extern "C" fn
+                        "promptrs:agent/runner@0.2.0#run")] unsafe extern "C" fn
                         export_run(arg0 : * mut u8, arg1 : usize, arg2 : * mut u8, arg3 :
                         usize,) -> * mut u8 { unsafe { $($path_to_types)*::
                         _export_run_cabi::<$ty > (arg0, arg1, arg2, arg3) } } #[unsafe
-                        (export_name = "cabi_post_promptrs:agent/runner@0.1.0#run")]
+                        (export_name = "cabi_post_promptrs:agent/runner@0.2.0#run")]
                         unsafe extern "C" fn _post_return_run(arg0 : * mut u8,) { unsafe
                         { $($path_to_types)*:: __post_return_run::<$ty > (arg0) } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_promptrs_agent_runner_0_1_0_cabi;
+                pub(crate) use __export_promptrs_agent_runner_0_2_0_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -1081,19 +1092,19 @@ mod _rt {
             String::from_utf8_unchecked(bytes)
         }
     }
-    pub unsafe fn invalid_enum_discriminant<T>() -> T {
-        if cfg!(debug_assertions) {
-            panic!("invalid enum discriminant")
-        } else {
-            unsafe { core::hint::unreachable_unchecked() }
-        }
-    }
     pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
         if size == 0 {
             return;
         }
         let layout = alloc::Layout::from_size_align_unchecked(size, align);
         alloc::dealloc(ptr, layout);
+    }
+    pub unsafe fn invalid_enum_discriminant<T>() -> T {
+        if cfg!(debug_assertions) {
+            panic!("invalid enum discriminant")
+        } else {
+            unsafe { core::hint::unreachable_unchecked() }
+        }
     }
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
@@ -1125,7 +1136,7 @@ macro_rules! __export_agent_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::promptrs::agent::runner::__export_promptrs_agent_runner_0_1_0_cabi!($ty
+        exports::promptrs::agent::runner::__export_promptrs_agent_runner_0_2_0_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::promptrs::agent::runner);
     };
 }
@@ -1133,32 +1144,33 @@ macro_rules! __export_agent_impl {
 pub(crate) use __export_agent_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:promptrs:agent@0.1.0:agent:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:promptrs:agent@0.2.0:agent:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 931] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa7\x06\x01A\x02\x01\
-A\x08\x01B\x0d\x01o\x02ss\x01q\x05\x06system\x01s\0\x04user\x01s\0\x09assistant\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 993] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xe5\x06\x01A\x02\x01\
+A\x08\x01B\x12\x01o\x02ss\x01q\x05\x06system\x01s\0\x04user\x01s\0\x09assistant\x01\
 s\0\x09tool-call\x01\0\0\x06status\x01\0\0\x04\0\x07message\x03\0\x01\x01ku\x01p\
 \x02\x01r\x05\x05models\x0btemperature\x03\x05top-p\x03\x08messages\x04\x06strea\
 m\x7f\x04\0\x06params\x03\0\x05\x01ks\x01r\x03\x07api-key\x07\x08base-urls\x04bo\
-dy\x06\x04\0\x07request\x03\0\x08\x01j\x01s\x01s\x01@\x01\x07payload\x09\0\x0a\x04\
-\0\x07receive\x01\x0b\x03\0\x20promptrs:client/completion@0.1.0\x05\0\x01B\x0e\x01\
-o\x02ss\x01k\0\x01r\x02\x09reasoning\x01\x09tool-call\0\x04\0\x06delims\x03\0\x02\
-\x01p\0\x01r\x02\x04names\x09arguments\x04\x04\0\x09tool-call\x03\0\x05\x01ks\x01\
-p\x06\x01r\x03\x09reasoning\x07\x07contents\x0atool-calls\x08\x04\0\x08response\x03\
-\0\x09\x01k\x03\x01@\x02\x08responses\x06delims\x0b\0\x0a\x04\0\x05parse\x01\x0c\
-\x03\0\x1epromptrs:parser/response@0.1.0\x05\x01\x01B\x0e\x01r\x02\x06prompts\x0b\
-status-calls\x04\0\x06system\x03\0\0\x01o\x02ss\x01r\x02\x0favailable-tools\x02\x09\
-tool-call\x02\x04\0\x0btool-delims\x03\0\x03\x01r\x02\x06outputs\x05scoreu\x04\0\
-\x0dtool-response\x03\0\x05\x01@\x01\x0btool-delims\x04\0\x01\x04\0\x04init\x01\x07\
-\x01@\0\0\x06\x04\0\x06status\x01\x08\x01p\x02\x01@\x02\x09tool-names\x04args\x09\
-\0\x06\x04\0\x04call\x01\x0a\x03\0\x1bpromptrs:tools/caller@0.1.0\x05\x02\x01B\x02\
-\x01@\x02\x05inputs\x06configs\0s\x04\0\x03run\x01\0\x04\0\x1bpromptrs:agent/run\
-ner@0.1.0\x05\x03\x04\0\x1apromptrs:agent/agent@0.1.0\x04\0\x0b\x0b\x01\0\x05age\
-nt\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10\
-wit-bindgen-rust\x060.41.0";
+dy\x06\x04\0\x07request\x03\0\x08\x01r\x02\x04names\x09argumentss\x04\0\x09tool-\
+call\x03\0\x0a\x01p\x0b\x01r\x02\x04texts\x0atool-calls\x0c\x04\0\x08response\x03\
+\0\x0d\x01j\x01\x0e\x01s\x01@\x01\x07payload\x09\0\x0f\x04\0\x07receive\x01\x10\x03\
+\0\x20promptrs:client/completion@0.2.0\x05\0\x01B\x0d\x01o\x02ss\x01k\0\x01r\x02\
+\x09reasoning\x01\x09tool-call\0\x04\0\x06delims\x03\0\x02\x01r\x02\x04names\x09\
+argumentss\x04\0\x09tool-call\x03\0\x04\x01ks\x01p\x05\x01r\x03\x09reasoning\x06\
+\x07contents\x0atool-calls\x07\x04\0\x08response\x03\0\x08\x01k\x03\x01@\x02\x08\
+responses\x06delims\x0a\0\x09\x04\0\x05parse\x01\x0b\x03\0\x1epromptrs:parser/re\
+sponse@0.2.0\x05\x01\x01B\x0d\x01r\x02\x06prompts\x0bstatus-calls\x04\0\x06syste\
+m\x03\0\0\x01o\x02ss\x01r\x02\x0favailable-tools\x02\x09tool-call\x02\x04\0\x0bt\
+ool-delims\x03\0\x03\x01r\x02\x06outputs\x05scoreu\x04\0\x0dtool-response\x03\0\x05\
+\x01@\x01\x06delims\x04\0\x01\x04\0\x04init\x01\x07\x01@\0\0\x06\x04\0\x06status\
+\x01\x08\x01@\x02\x04names\x09argumentss\0\x06\x04\0\x04call\x01\x09\x03\0\x1bpr\
+omptrs:tools/caller@0.2.0\x05\x02\x01B\x02\x01@\x02\x05inputs\x06configs\0s\x04\0\
+\x03run\x01\0\x04\0\x1bpromptrs:agent/runner@0.2.0\x05\x03\x04\0\x1apromptrs:age\
+nt/agent@0.2.0\x04\0\x0b\x0b\x01\0\x05agent\x03\0\0\0G\x09producers\x01\x0cproce\
+ssed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
