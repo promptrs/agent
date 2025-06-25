@@ -42,7 +42,7 @@ impl Guest for Component {
 
 		loop {
 			let Ok(RawResponse {
-				text,
+				mut text,
 				mut tool_calls,
 			}) = receive(&request)
 			else {
@@ -50,7 +50,9 @@ impl Guest for Component {
 			};
 
 			if tool_calls.is_empty() {
-				tool_calls = parse(&text, Some(&delims))
+				let parsed = parse(&text, Some(&delims));
+				text = parsed.content;
+				tool_calls = parsed
 					.tool_calls
 					.into_iter()
 					.map(|tc| ToolCall {
@@ -59,6 +61,12 @@ impl Guest for Component {
 					})
 					.collect();
 			}
+
+			let text = text.trim();
+			if !text.is_empty() {
+				request.body.messages.push(Message::Assistant(text.into()));
+			}
+
 			for tool_call in tool_calls {
 				let resp = call(&tool_call.name, &tool_call.arguments);
 				let tc = format!(
