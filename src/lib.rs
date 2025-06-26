@@ -55,9 +55,9 @@ impl Guest for Component {
 				continue;
 			};
 
+			let parsed = parse(&text, Some(&delims));
+			text = parsed.content;
 			if tool_calls.is_empty() {
-				let parsed = parse(&text, Some(&delims));
-				text = parsed.content;
 				tool_calls = parsed
 					.tool_calls
 					.into_iter()
