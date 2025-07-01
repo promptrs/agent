@@ -48,6 +48,8 @@ impl Guest for Component {
 		};
 
 		loop {
+			eprintln!("Messages: {:#?}", request.body.messages);
+
 			let Ok(RawResponse {
 				mut text,
 				mut tool_calls,
