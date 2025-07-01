@@ -92,7 +92,7 @@ impl Guest for Component {
 				Err(user) => request.body.messages.push(Message::User(user)),
 			};
 
-			request.body.messages = prune(request.body.messages, 20000);
+			request.body.messages = prune(request.body.messages, config.char_limit);
 		}
 	}
 }
@@ -144,6 +144,7 @@ struct Config {
 	temperature: Option<f64>,
 	top_p: Option<f64>,
 	delims: DelimConfig,
+	char_limit: u64,
 }
 
 #[derive(Deserialize)]
