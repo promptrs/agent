@@ -14,8 +14,9 @@ struct Component;
 impl Guest for Component {
 	fn run(input: String, config: String) -> String {
 		let tooling = Tooling::new(&config);
-		let Ok(config) = serde_json::from_str::<Config>(&config) else {
-			return "Failed".into();
+		let config = match serde_json::from_str::<Config>(&config) {
+			Ok(config) => config,
+			Err(err) => return err.to_string(),
 		};
 
 		let delims = &Delims {
@@ -98,21 +99,21 @@ impl Guest for Component {
 }
 
 fn prune(messages: Vec<Message>, size: u64) -> Vec<Message> {
-	let mut pruned = messages.iter().skip(1).rev().scan(0, |acc, msg| {
+	let pruned = messages.iter().skip(1).rev().scan(0, |acc, msg| {
 		if *acc > size as usize {
 			return None;
 		}
 		*acc += match msg {
-			Message::System(content) => *acc + content.len(),
-			Message::User(content) => *acc + content.len(),
-			Message::Assistant(content) => *acc + content.len(),
-			Message::ToolCall((req, res)) => *acc + req.len() + res.len(),
-			Message::Status((req, res)) => *acc + req.len() + res.len(),
+			Message::System(content) => content.len(),
+			Message::User(content) => content.len(),
+			Message::Assistant(content) => content.len(),
+			Message::ToolCall((req, res)) => req.len() + res.len(),
+			Message::Status((req, res)) => req.len() + res.len(),
 		};
 		Some(msg)
 	});
 
-	let mut messages = if let Some(pos) = pruned.position(is_status) {
+	let mut messages = if let Some(pos) = pruned.clone().position(is_status) {
 		pruned
 			.clone()
 			.take(pos + 1)
