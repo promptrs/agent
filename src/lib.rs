@@ -42,7 +42,11 @@ impl Guest for Component {
 				model: config.model,
 				temperature: config.temperature,
 				top_p: config.top_p,
-				messages: vec![Message::System(prompt), Message::User(user)],
+				messages: vec![
+					Message::System(prompt),
+					Message::User(user),
+					Message::Status((status_call.clone(), tooling.status())),
+				],
 				stream: true,
 			},
 		};
