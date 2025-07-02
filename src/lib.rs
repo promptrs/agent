@@ -96,7 +96,8 @@ impl Guest for Component {
 
 			match tooling.prompt(text) {
 				Ok(output) => return output,
-				Err(user) => request.body.messages.push(Message::User(user)),
+				Err(user) if !user.is_empty() => request.body.messages.push(Message::User(user)),
+				_ => {}
 			};
 
 			request.body.messages = prune(request.body.messages, config.char_limit);
