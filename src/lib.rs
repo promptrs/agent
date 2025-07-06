@@ -81,6 +81,9 @@ impl Guest for Component {
 			}
 
 			for tool_call in tool_calls {
+				if tool_call.name == status_call {
+					continue;
+				}
 				let resp = tooling.call(&tool_call.name, &tool_call.arguments);
 				let tc = format!(
 					r#"{{"name":"{}","arguments":{}}}"#,
